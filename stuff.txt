@@ -1,0 +1,61 @@
+root@b0d62d0f3005:/# cat es-cleaner.py
+#!/usr/bin/env python
+
+import json
+import os
+from elasticsearch import Elasticsearch
+from datetime import datetime
+import socket
+import logging
+import sys
+import signal
+import time
+
+class GracefulKiller:
+  kill_now = False
+  def __init__(self):
+    signal.signal(signal.SIGINT, self.exit_gracefully)
+    signal.signal(signal.SIGTERM, self.exit_gracefully)
+
+  def exit_gracefully(self,signum, frame):
+    self.kill_now = True
+
+if __name__ == '__main__':
+  killer = GracefulKiller()
+  es = Elasticsearch(os.environ.get("ES_HOSTS","172.16.1.17:9200").split(","))
+  logging.basicConfig(stream=sys.stdout,
+                      level=os.environ.get("LOG_LEVEL","WARN").upper())
+
+  logging.warn("%s starting..." % (os.path.basename(__file__)))
+  while True:
+    # Probe any available AMD cards
+    try:
+      indices = es.indices.get(index="gpu-sensor*")
+      logging.info("Found indices: %s" % (indices))
+    except Exception as inst:
+      logging.error("Caught exception: %s, %s" % (type(inst), inst))
+    finally:
+      pass
+
+    if killer.kill_now:
+      break
+    time.sleep(float(os.environ.get("SLEEP_TIME", 60)))
+
+  logging.warn("%s exiting gracefully..." % (os.path.basename(__file__)))
+
+
+root@b0d62d0f3005:/# cat body.json
+{
+  "query": {
+    "match_all": {}
+  },
+  "size": 1,
+  "sort": [
+    {
+      "_timestamp": {
+        "order": "desc"
+      }
+    }
+  ]
+}
+
