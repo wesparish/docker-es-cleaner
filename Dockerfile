@@ -10,7 +10,10 @@ RUN apt-get update && \
 
 ENV ES_HOSTS="172.16.1.17:9200" \
     LOG_LEVEL="WARN" \
-    SLEEP_TIME=3600
+    SLEEP_TIME=3600 \
+    INDEX_LIST="logstash*,gpu-sensor*,metricbeat*" \
+    RETENTION_DAYS=3
+
 
 COPY es-cleaner.py /es-cleaner.py
 RUN chown root:root /es-cleaner.py
@@ -18,4 +21,4 @@ RUN chown root:root /es-cleaner.py
 COPY docker-entrypoint.sh /docker-entrypoint.sh
 ENTRYPOINT ["/docker-entrypoint.sh"]
 
-CMD ["/get-gpu-sensors.py"]
+CMD ["/es-cleaner.py"]

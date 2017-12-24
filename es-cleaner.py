@@ -27,7 +27,7 @@ if __name__ == '__main__':
                       level=os.environ.get("LOG_LEVEL","WARN").upper())
 
   index_list = os.environ.get("INDEX_LIST", "logstash*,gpu-sensor*,metricbeat*").split(",")
-  retention_days = os.environ.get("RETENTION_DAYS", 3)
+  retention_days = int(os.environ.get("RETENTION_DAYS", 3))
 
   logging.warn("%s starting..." % (os.path.basename(__file__)))
   while not killer.kill_now:
@@ -40,27 +40,29 @@ if __name__ == '__main__':
           newest_document = es.search(index=index,
                                       filter_path=['hits.hits._source.@timestamp'],
                                       body=\
-{
-  'query': {
-    'match_all': {}
-  },
-  'size': 1,
-  'sort': [
-    {
-      '_timestamp': {
-        'order': 'desc'
-      }
-    }
-  ]
-})
+                      {
+                        'query': {
+                          'match_all': {}
+                        },
+                        'size': 1,
+                        'sort': [
+                          {
+                            '_timestamp': {
+                              'order': 'desc'
+                            }
+                          }
+                        ]
+                      })
           if newest_document.get("hits", False):
-            logging.info("Newest document: %s" % (newest_document))
-            logging.info("Newest document: %s" % (newest_document['hits']['hits'][0]['_source']['@timestamp']))
             newest_timestamp = parse_date(newest_document['hits']['hits'][0]['_source']['@timestamp'])
             logging.info("Newest timestamp: %s" % (newest_timestamp))
-            
-            if newest_timestamp < (datetime.datetime.now() - datetime.timedelta(days=retention_days)):
+
+            if newest_timestamp.replace(tzinfo=None) < (datetime.datetime.utcnow() - 
+                                                        datetime.timedelta(days=retention_days)):
               logging.warn("Deleting index: %s" % (index))
+              es.indices.delete(index=index)
+            else:
+              logging.info("Not deleting index: %s" % (index))
 
     except Exception as inst:
       logging.error("Caught exception: %s, %s" % (type(inst), inst))
