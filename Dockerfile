@@ -3,6 +3,7 @@ FROM ubuntu:16.04
 RUN apt-get update && \
     apt-get install python python-pip vim curl -y && \
     pip install elasticsearch5 && \
+    pip install python-dateutil && \
     apt-get remove python-pip -y && \
     apt-get autoremove -y && \
     apt-get clean
