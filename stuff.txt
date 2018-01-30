@@ -22,7 +22,7 @@ class GracefulKiller:
 
 if __name__ == '__main__':
   killer = GracefulKiller()
-  es = Elasticsearch(os.environ.get("ES_HOSTS","172.16.1.17:9200").split(","))
+  es = Elasticsearch(os.environ.get("ES_HOSTS","elasticsearch.weshouse:9200").split(","))
   logging.basicConfig(stream=sys.stdout,
                       level=os.environ.get("LOG_LEVEL","WARN").upper())
 

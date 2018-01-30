@@ -8,10 +8,10 @@ RUN apt-get update && \
     apt-get autoremove -y && \
     apt-get clean
 
-ENV ES_HOSTS="172.16.1.17:9200" \
+ENV ES_HOSTS="elasticsearch.weshouse:9200" \
     LOG_LEVEL="WARN" \
     SLEEP_TIME=3600 \
-    INDEX_LIST="logstash*,gpu-sensor*,metricbeat*" \
+    INDEX_LIST="logstash*,gpu-sensor*,metricbeat*,heartbeat*" \
     RETENTION_DAYS=3
 
 
